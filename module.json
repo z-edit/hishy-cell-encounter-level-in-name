@@ -1,0 +1,12 @@
+{
+  "id": "hishyCellEncounters",
+  "name": "Cell Encounter Levels In Name",
+  "author": "Hishy",
+  "version": "1.0",
+  "released": "11/01/2017",
+  "updated": "11/01/2017",
+  "description": "A simple patcher to add the assigned encounter zone level into the name.",
+  "requires": ["unifiedPatchingFramework"],
+  "moduleLoader": "UPF",
+  "canHotLoad": true
+}
