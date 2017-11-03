@@ -16,17 +16,8 @@ registerPatcher({
         return filenames;
     },
     execute: {
-        initialize: function(patch, helpers, settings, locals) {
-            // Perform anything that needs to be done once at the beginning of the
-            // patcher's execution here.  This can be used to cache records which don't
-            // need to be patched, but need to be referred to later on.  Store values
-            // on the locals variable to refer to them later in the patching process.
-        },
         process: [{
             load: function(plugin, helpers, settings, locals) {
-                // return a falsy value to skip loading/patching any records from a plugin
-                // return an object specifying the signature to load, and a filter
-                // function which returns true if a record should be patched.
                 return {
                     signature: 'CELL',
                     filter: function(record) {
@@ -35,10 +26,6 @@ registerPatcher({
                 }
             },
             patch: function(record, helpers, settings, locals) {
-                // change values on the record as required
-                // you can also remove the record here, but it is discouraged.
-                // (try to use filters instead.)
-                //helpers.logMessage(xelib.FullName(record));
                 let name = xelib.FullName(record);
                 let eczn = xelib.GetLinksTo(record, 'XEZN');
                 let min = xelib.GetUIntValue(eczn, 'DATA\\Min Level');
@@ -59,11 +46,6 @@ registerPatcher({
                 helpers.logMessage(name);
                 xelib.SetValue(record, 'FULL', name);
             }
-        }],
-        finalize: function(patch, helpers, settings, locals) {
-            // perform any cleanup here
-            // note that the framework automatically removes unused masters as
-            // well as ITPO and ITM records, so you don't need to do that
-        }
+        }]
     }
 });
