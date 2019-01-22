@@ -1,4 +1,16 @@
 /* global ngapp, xelib */
+let getEncounterZone = function(record, patchFile) {
+    let eczn = xelib.GetLinksTo(record, 'XEZN');
+    if (!eczn) return;
+    return xelib.GetPreviousOverride(eczn, patchFile);
+};
+
+let getFormula = functuion(settings, min, max) {   
+    if (min < max) return settings.formulaRangedLeveled;
+    if (min === max) return settings.formulaDeleveled;
+    return settings.formulaLeveled;
+};
+
 registerPatcher({
     info: info,
     gameModes: [xelib.gmTES5, xelib.gmSSE],
@@ -6,42 +18,39 @@ registerPatcher({
         label: 'Cell Encounter Levels In Name',
         templateUrl: `${patcherPath}/partials/settings.html`,
         defaultSettings: {
-            formulaRangedLeveled: '{name} [{min} ~ {max}]',
-            formulaDeleveled: '{name} [{min}]',
-            formulaLeveled: '{name} [{min}+]'
+            formulaRangedLeveled: '{name} ({min} ~ {max})',
+            formulaDeleveled: '{name} ({min})',
+            formulaLeveled: '{name} ({min}+)'
         }
     },
-    requiredFiles: [],
-    getFilesToPatch: function(filenames) {
-        return filenames;
-    },
     execute: {
+        initialize: function(patchFile, helpers, settings, locals) {
+            locals.patchFile = patchFile;
+        },
         process: [{
             load: function(plugin, helpers, settings, locals) {
                 return {
                     signature: 'CELL',
                     filter: function(record) {
-                        return xelib.HasElement(record, 'FULL') && xelib.HasElement(record, 'XEZN') && xelib.GetFlag(record, 'DATA', 'Is Interior Cell');
+                        return xelib.HasElement(record, 'FULL') && 
+                            xelib.HasElement(record, 'XEZN') && 
+                            xelib.GetFlag(record, 'DATA', 'Is Interior Cell');
                     }
                 }
             },
             patch: function(record, helpers, settings, locals) {
-                let name = xelib.FullName(record);
-                let eczn = xelib.GetLinksTo(record, 'XEZN');
-                let min = xelib.GetUIntValue(eczn, 'DATA\\Min Level');
-                let max = xelib.GetUIntValue(eczn, 'DATA\\Max Level');
-
-                let formula = settings.formulaLeveled;
-
-                if (min < max) {
-                    formula = settings.formulaRangedLeveled;
-                } else if (min == max) {
-                    formula = settings.formulaDeleveled;
-                }
-
-                name = formula.replace(/{name}/g, name);
-                name = name.replace(/{min}/g, min);
-                name = name.replace(/{max}/g, max);
+                let eczn = getEncounterZone(record, locals.patchFile);
+                if (!eczn) return;
+                
+                let min = xelib.GetUIntValue(eczn, 'DATA\\Min Level'),
+                    max = xelib.GetUIntValue(eczn, 'DATA\\Max Level'),
+                    formula = getFormula(settings, min, max),
+                    fullName = xelib.FullName(record);
+                    
+                let name = formula
+                    .replace(/{name}/g, fullName)
+                    .replace(/{min}/g, min)
+                    .replace(/{max}/g, max);
 
                 helpers.logMessage(name);
                 xelib.SetValue(record, 'FULL', name);
