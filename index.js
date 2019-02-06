@@ -5,7 +5,7 @@ let getEncounterZone = function(record, patchFile) {
     return xelib.GetPreviousOverride(eczn, patchFile);
 };
 
-let getFormula = functuion(settings, min, max) {   
+let getFormula = function(settings, min, max) {   
     if (min < max) return settings.formulaRangedLeveled;
     if (min === max) return settings.formulaDeleveled;
     return settings.formulaLeveled;
