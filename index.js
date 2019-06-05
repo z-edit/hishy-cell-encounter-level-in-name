@@ -44,7 +44,7 @@ registerPatcher({
         }
     },
     execute: (patchFile, helpers, settings, locals) => ({
-        process: {
+        process: [{
             load: {
                 signature: 'CELL',
                 filter: function(record) {
@@ -62,6 +62,6 @@ registerPatcher({
                 if (!settings.patchMapMarkers) return;
                 patchMapMarker(cell, name);
             }
-        }
+        }]
     })
 });
