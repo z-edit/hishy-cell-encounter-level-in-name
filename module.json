@@ -2,10 +2,10 @@
   "id": "hishyCellEncounters",
   "name": "Cell Encounter Levels In Name",
   "author": "Hishy",
-  "version": "1.1",
+  "version": "2.0",
   "released": "11/01/2017",
-  "updated": "3/3/2019",
-  "description": "A simple patcher which adds encounter zone levels to cell names.",
+  "updated": "6/5/2019",
+  "description": "A simple patcher which adds encounter zone levels to cell names and map markers.",
   "requires": ["unifiedPatchingFramework"],
   "moduleLoader": "UPF",
   "canHotLoad": true
