@@ -1,14 +1,34 @@
 /* global ngapp, xelib */
-let getEncounterZone = function(record, patchFile) {
+let getEncounterZone = function(cell, patchFile) {
     let eczn = xelib.GetLinksTo(record, 'XEZN');
     if (!eczn) return;
     return xelib.GetPreviousOverride(eczn, patchFile);
 };
 
-let getFormula = function(settings, min, max) {   
+let getFormula = function(settings, min, max) {
     if (min < max) return settings.formulaRangedLeveled;
     if (min === max) return settings.formulaDeleveled;
     return settings.formulaLeveled;
+};
+
+let getNewCellName = function(cell, settings, eczn) {
+    let min = xelib.GetUIntValue(eczn, 'DATA\\Min Level'),
+        max = xelib.GetUIntValue(eczn, 'DATA\\Max Level'),
+        formula = getFormula(settings, min, max),
+        fullName = xelib.FullName(cell);
+
+    return formula
+        .replace(/{name}/g, fullName)
+        .replace(/{min}/g, min)
+        .replace(/{max}/g, max);
+};
+
+let patchMapMarker = function(cell, name) {
+    let location = xelib.GetLinksTo(cell, 'XLCN');
+    if (!location) return;
+    let mapMarker = xelib.GetLinksTo(location, 'MNAM');
+    if (!mapMarker) return;
+    xelib.SetValue(mapMarker, 'Map Marker\\FULL', name);
 };
 
 registerPatcher({
@@ -23,38 +43,25 @@ registerPatcher({
             formulaLeveled: '{name} ({min}+)'
         }
     },
-    execute: {
-        initialize: function(patchFile, helpers, settings, locals) {
-            locals.patchFile = patchFile;
-        },
-        process: [{
-            load: function(plugin, helpers, settings, locals) {
-                return {
-                    signature: 'CELL',
-                    filter: function(record) {
-                        return xelib.HasElement(record, 'FULL') && 
-                            xelib.HasElement(record, 'XEZN') && 
-                            xelib.GetFlag(record, 'DATA', 'Is Interior Cell');
-                    }
+    execute: (patchFile, helpers, settings, locals) => ({
+        process: {
+            load: {
+                signature: 'CELL',
+                filter: function(record) {
+                    return xelib.HasElement(record, 'FULL') &&
+                        xelib.HasElement(record, 'XEZN') &&
+                        xelib.GetFlag(record, 'DATA', 'Is Interior Cell');
                 }
             },
-            patch: function(record, helpers, settings, locals) {
-                let eczn = getEncounterZone(record, locals.patchFile);
+            patch: function(cell) {
+                let eczn = getEncounterZone(cell, locals.patchFile);
                 if (!eczn) return;
-                
-                let min = xelib.GetUIntValue(eczn, 'DATA\\Min Level'),
-                    max = xelib.GetUIntValue(eczn, 'DATA\\Max Level'),
-                    formula = getFormula(settings, min, max),
-                    fullName = xelib.FullName(record);
-                    
-                let name = formula
-                    .replace(/{name}/g, fullName)
-                    .replace(/{min}/g, min)
-                    .replace(/{max}/g, max);
-
+                let name = getNewCellName(cell, settings, eczn);
                 helpers.logMessage(name);
-                xelib.SetValue(record, 'FULL', name);
+                xelib.SetValue(cell, 'FULL', name);
+                if (!settings.patchMapMarkers) return;
+                patchMapMarker(cell, name);
             }
-        }]
-    }
+        }
+    })
 });
